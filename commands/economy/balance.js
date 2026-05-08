@@ -6,7 +6,7 @@ export const data = new SlashCommandBuilder()
   .setDescription('Shows your coin balance.');
 
 export async function execute(interaction) {
-  const user = await getUser(interaction.user.id);
+  const user = await getUser(interaction.guildId, interaction.user.id);
 
   await interaction.reply(`You have ${user.coins} coins.`);
 }

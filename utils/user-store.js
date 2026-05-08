@@ -5,31 +5,36 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const usersPath = path.join(__dirname, '..', 'data', 'users.json');
 
-export async function getUser(userId) {
+export async function getUser(guildId, userId) {
   const users = await readUsers();
 
-  return users[userId] ?? {
+  return users[guildId]?.[userId] ?? {
     coins: 0,
     lastDaily: null,
   };
 }
 
-export async function getUsers() {
-  return readUsers();
+export async function getUsers(guildId) {
+  const users = await readUsers();
+
+  return users[guildId] ?? {};
 }
 
-export async function updateUser(userId, update) {
+export async function updateUser(guildId, userId, update) {
   const users = await readUsers();
-  const currentUser = users[userId] ?? {
+
+  users[guildId] ??= {};
+
+  const currentUser = users[guildId][userId] ?? {
     coins: 0,
     lastDaily: null,
   };
 
-  users[userId] = update(currentUser);
+  users[guildId][userId] = update(currentUser);
 
   await writeUsers(users);
 
-  return users[userId];
+  return users[guildId][userId];
 }
 
 async function readUsers() {

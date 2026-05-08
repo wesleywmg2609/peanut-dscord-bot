@@ -12,19 +12,23 @@ export async function execute(interaction) {
   const now = Date.now();
   let claimed = false;
 
-  const user = await updateUser(interaction.user.id, (currentUser) => {
-    if (currentUser.lastDaily && now - currentUser.lastDaily < dailyCooldown) {
-      return currentUser;
-    }
+  const user = await updateUser(
+    interaction.guildId,
+    interaction.user.id,
+    (currentUser) => {
+      if (currentUser.lastDaily && now - currentUser.lastDaily < dailyCooldown) {
+        return currentUser;
+      }
 
-    claimed = true;
+      claimed = true;
 
-    return {
-      ...currentUser,
-      coins: currentUser.coins + dailyAmount,
-      lastDaily: now,
-    };
-  });
+      return {
+        ...currentUser,
+        coins: currentUser.coins + dailyAmount,
+        lastDaily: now,
+      };
+    },
+  );
 
   if (!claimed) {
     const nextDaily = Math.floor((user.lastDaily + dailyCooldown) / 1000);

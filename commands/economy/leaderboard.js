@@ -6,7 +6,7 @@ export const data = new SlashCommandBuilder()
   .setDescription('Shows the top coin balances.');
 
 export async function execute(interaction) {
-  const users = await getUsers();
+  const users = await getUsers(interaction.guildId);
   const leaderboard = Object.entries(users)
     .filter(([, user]) => user.coins > 0)
     .sort(([, firstUser], [, secondUser]) => secondUser.coins - firstUser.coins)
