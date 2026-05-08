@@ -30,6 +30,15 @@ export async function schedulePendingReminders(client) {
   }
 }
 
+export async function cancelReminder(reminderId) {
+  if (scheduledReminders.has(reminderId)) {
+    clearTimeout(scheduledReminders.get(reminderId));
+    scheduledReminders.delete(reminderId);
+  }
+
+  await deleteReminder(reminderId);
+}
+
 async function sendReminder(client, reminderId, reminder) {
   scheduledReminders.delete(reminderId);
 

@@ -23,6 +23,12 @@ export async function deleteReminder(reminderId) {
   await writeReminders(reminders);
 }
 
+export async function getReminder(reminderId) {
+  const reminders = await readReminders();
+
+  return reminders[reminderId] ?? null;
+}
+
 export async function getReminders() {
   return readReminders();
 }
