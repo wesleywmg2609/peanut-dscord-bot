@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
+import Database from 'better-sqlite3';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dataPath = path.join(__dirname, '..', 'data');
@@ -9,7 +9,7 @@ const databasePath = path.join(dataPath, 'peanut.db');
 
 mkdirSync(dataPath, { recursive: true });
 
-export const db = new DatabaseSync(databasePath);
+export const db = new Database(databasePath);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
