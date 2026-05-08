@@ -5,8 +5,7 @@ import {
   EmbedBuilder,
   SlashCommandBuilder,
 } from 'discord.js';
-
-const polls = new Map();
+import { createPoll, getPoll, updatePoll } from '../utils/poll-store.js';
 
 export const data = new SlashCommandBuilder()
   .setName('poll')
@@ -22,17 +21,19 @@ export async function execute(interaction) {
   const question = interaction.options.getString('question', true);
   const pollId = interaction.id;
 
-  polls.set(pollId, {
+  await createPoll(pollId, {
     question,
-    votes: new Map(),
+    creatorId: interaction.user.id,
+    createdAt: Date.now(),
+    votes: {},
   });
 
-  await interaction.reply(buildPollMessage(pollId));
+  await interaction.reply(await buildPollMessage(pollId));
 }
 
 export async function handleButton(interaction) {
   const [, vote, pollId] = interaction.customId.split(':');
-  const poll = polls.get(pollId);
+  const poll = await getPoll(pollId);
 
   if (!poll) {
     await interaction.reply({
@@ -42,13 +43,21 @@ export async function handleButton(interaction) {
     return;
   }
 
-  poll.votes.set(interaction.user.id, vote);
+  await updatePoll(pollId, (currentPoll) => {
+    return {
+      ...currentPoll,
+      votes: {
+        ...currentPoll.votes,
+        [interaction.user.id]: vote,
+      },
+    };
+  });
 
-  await interaction.update(buildPollMessage(pollId));
+  await interaction.update(await buildPollMessage(pollId));
 }
 
-function buildPollMessage(pollId) {
-  const poll = polls.get(pollId);
+async function buildPollMessage(pollId) {
+  const poll = await getPoll(pollId);
   const yesVotes = countVotes(poll, 'yes');
   const noVotes = countVotes(poll, 'no');
   const totalVotes = yesVotes + noVotes;
@@ -93,6 +102,6 @@ function buildPollMessage(pollId) {
 }
 
 function countVotes(poll, vote) {
-  return [...poll.votes.values()].filter((currentVote) => currentVote === vote)
+  return Object.values(poll.votes).filter((currentVote) => currentVote === vote)
     .length;
 }
