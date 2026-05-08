@@ -30,6 +30,21 @@ client.once(Events.ClientReady, async (readyClient) => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
+  if (interaction.isStringSelectMenu()) {
+    const commandName = interaction.customId.split(':')[0];
+    const command = commands.get(commandName);
+
+    if (!command?.handleSelectMenu) return;
+
+    try {
+      await command.handleSelectMenu(interaction);
+    } catch (error) {
+      await handleInteractionError(interaction, error);
+    }
+
+    return;
+  }
+
   if (interaction.isButton()) {
     const commandName = interaction.customId.split(':')[0];
     const command = commands.get(commandName);
