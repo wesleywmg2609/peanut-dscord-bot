@@ -3,7 +3,6 @@ const validDeployScopes = new Set(['guild', 'global']);
 export function getBotEnv() {
   return {
     discordToken: getRequiredEnv('DISCORD_TOKEN'),
-    tempVoiceChannelId: process.env.TEMP_VOICE_CHANNEL_ID || null,
   };
 }
 
