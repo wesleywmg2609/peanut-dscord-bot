@@ -1,56 +1,60 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const usersPath = path.join(__dirname, '..', 'data', 'users.json');
+import { db } from './database.js';
 
 export async function getUser(guildId, userId) {
-  const users = await readUsers();
+  const user = db
+    .prepare(
+      `
+        SELECT coins, last_daily AS lastDaily
+        FROM users
+        WHERE guild_id = ? AND user_id = ?
+      `,
+    )
+    .get(guildId, userId);
 
-  return users[guildId]?.[userId] ?? {
+  return user ?? {
     coins: 0,
     lastDaily: null,
   };
 }
 
 export async function getUsers(guildId) {
-  const users = await readUsers();
+  const rows = db
+    .prepare(
+      `
+        SELECT user_id AS userId, coins, last_daily AS lastDaily
+        FROM users
+        WHERE guild_id = ?
+      `,
+    )
+    .all(guildId);
 
-  return users[guildId] ?? {};
+  return Object.fromEntries(
+    rows.map((row) => [
+      row.userId,
+      {
+        coins: row.coins,
+        lastDaily: row.lastDaily,
+      },
+    ]),
+  );
 }
 
 export async function updateUser(guildId, userId, update) {
-  const users = await readUsers();
+  const currentUser = await getUser(guildId, userId);
+  const updatedUser = update(currentUser);
 
-  users[guildId] ??= {};
+  db.prepare(
+    `
+      INSERT INTO users (guild_id, user_id, coins, last_daily)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(guild_id, user_id) DO UPDATE SET
+        coins = excluded.coins,
+        last_daily = excluded.last_daily
+    `,
+  ).run(guildId, userId, updatedUser.coins, updatedUser.lastDaily);
 
-  const currentUser = users[guildId][userId] ?? {
-    coins: 0,
-    lastDaily: null,
+  return {
+    coins: updatedUser.coins,
+    lastDaily: updatedUser.lastDaily,
   };
-
-  users[guildId][userId] = update(currentUser);
-
-  await writeUsers(users);
-
-  return users[guildId][userId];
-}
-
-async function readUsers() {
-  try {
-    const data = await readFile(usersPath, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return {};
-    }
-
-    throw error;
-  }
-}
-
-async function writeUsers(users) {
-  await mkdir(path.dirname(usersPath), { recursive: true });
-  await writeFile(usersPath, `${JSON.stringify(users, null, 2)}\n`);
 }

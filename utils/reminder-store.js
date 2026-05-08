@@ -1,62 +1,99 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const remindersPath = path.join(__dirname, '..', 'data', 'reminders.json');
+import { db } from './database.js';
 
 export async function createReminder(reminderId, reminder) {
-  const reminders = await readReminders();
+  db.prepare(
+    `
+      INSERT INTO reminders (
+        id,
+        user_id,
+        guild_name,
+        message,
+        remind_at,
+        created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?)
+    `,
+  ).run(
+    reminderId,
+    reminder.userId,
+    reminder.guildName,
+    reminder.message,
+    reminder.remindAt,
+    reminder.createdAt,
+  );
 
-  reminders[reminderId] = reminder;
-
-  await writeReminders(reminders);
-
-  return reminders[reminderId];
+  return reminder;
 }
 
 export async function deleteReminder(reminderId) {
-  const reminders = await readReminders();
-
-  delete reminders[reminderId];
-
-  await writeReminders(reminders);
+  db.prepare('DELETE FROM reminders WHERE id = ?').run(reminderId);
 }
 
 export async function getReminder(reminderId) {
-  const reminders = await readReminders();
+  const reminder = db
+    .prepare(
+      `
+        SELECT
+          user_id AS userId,
+          guild_name AS guildName,
+          message,
+          remind_at AS remindAt,
+          created_at AS createdAt
+        FROM reminders
+        WHERE id = ?
+      `,
+    )
+    .get(reminderId);
 
-  return reminders[reminderId] ?? null;
+  return reminder ?? null;
 }
 
 export async function getReminders() {
-  return readReminders();
+  const reminders = db
+    .prepare(
+      `
+        SELECT
+          id,
+          user_id AS userId,
+          guild_name AS guildName,
+          message,
+          remind_at AS remindAt,
+          created_at AS createdAt
+        FROM reminders
+      `,
+    )
+    .all();
+
+  return Object.fromEntries(
+    reminders.map((reminder) => {
+      const { id, ...reminderData } = reminder;
+
+      return [id, reminderData];
+    }),
+  );
 }
 
 export async function getUserReminders(userId) {
-  const reminders = await readReminders();
+  const reminders = db
+    .prepare(
+      `
+        SELECT
+          id,
+          user_id AS userId,
+          guild_name AS guildName,
+          message,
+          remind_at AS remindAt,
+          created_at AS createdAt
+        FROM reminders
+        WHERE user_id = ?
+        ORDER BY remind_at ASC
+      `,
+    )
+    .all(userId);
 
-  return Object.entries(reminders)
-    .filter(([, reminder]) => reminder.userId === userId)
-    .sort(([, firstReminder], [, secondReminder]) => {
-      return firstReminder.remindAt - secondReminder.remindAt;
-    });
-}
+  return reminders.map((reminder) => {
+    const { id, ...reminderData } = reminder;
 
-async function readReminders() {
-  try {
-    const data = await readFile(remindersPath, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return {};
-    }
-
-    throw error;
-  }
-}
-
-async function writeReminders(reminders) {
-  await mkdir(path.dirname(remindersPath), { recursive: true });
-  await writeFile(remindersPath, `${JSON.stringify(reminders, null, 2)}\n`);
+    return [id, reminderData];
+  });
 }

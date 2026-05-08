@@ -1,6 +1,8 @@
 node_modules/
 .pnpm-store/
 .env
+data/*.db
+data/*.db-*
 
 npm-debug.log*
 pnpm-debug.log*
