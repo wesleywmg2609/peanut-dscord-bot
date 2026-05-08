@@ -12,14 +12,6 @@ mkdirSync(dataPath, { recursive: true });
 export const db = new Database(databasePath);
 
 db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    guild_id TEXT NOT NULL,
-    user_id TEXT NOT NULL,
-    coins INTEGER NOT NULL DEFAULT 0,
-    last_daily INTEGER,
-    PRIMARY KEY (guild_id, user_id)
-  );
-
   CREATE TABLE IF NOT EXISTS reminders (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
