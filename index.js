@@ -6,10 +6,16 @@ import { loadCommands } from './utils/load-commands.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const commandsPath = path.join(__dirname, 'commands');
+const loadedCommands = await loadCommands(commandsPath);
 const commands = new Map();
 
-for (const command of await loadCommands(commandsPath)) {
+for (const command of loadedCommands) {
   commands.set(command.data.name, command);
+}
+
+console.log(`Loaded ${commands.size} commands:`);
+for (const command of loadedCommands) {
+  console.log(`- /${command.data.name}`);
 }
 
 const client = new Client({

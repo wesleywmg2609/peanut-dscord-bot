@@ -6,7 +6,8 @@ import { loadCommands } from './utils/load-commands.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const commandsPath = path.join(__dirname, 'commands');
-const commands = (await loadCommands(commandsPath)).map((command) =>
+const loadedCommands = await loadCommands(commandsPath);
+const commands = loadedCommands.map((command) =>
   command.data.toJSON(),
 );
 
@@ -20,4 +21,4 @@ await rest.put(
   { body: commands },
 );
 
-console.log('Slash commands registered.');
+console.log(`Slash commands registered: ${commands.length}`);
