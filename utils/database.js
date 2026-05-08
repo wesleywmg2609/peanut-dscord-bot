@@ -31,6 +31,24 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS guild_settings (
     guild_id TEXT PRIMARY KEY,
-    temp_voice_channel_id TEXT
+    temp_voice_channel_id TEXT,
+    error_log_channel_id TEXT
   );
 `);
+
+const guildSettingsColumns = db
+  .prepare('PRAGMA table_info(guild_settings)')
+  .all()
+  .map((column) => column.name);
+
+if (!guildSettingsColumns.includes('error_log_channel_id')) {
+  db.exec('ALTER TABLE guild_settings ADD COLUMN error_log_channel_id TEXT');
+}
+
+if (guildSettingsColumns.includes('log_channel_id')) {
+  db.exec(`
+    UPDATE guild_settings
+    SET error_log_channel_id = COALESCE(error_log_channel_id, log_channel_id)
+  `);
+  db.exec('ALTER TABLE guild_settings DROP COLUMN log_channel_id');
+}
