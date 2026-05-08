@@ -27,6 +27,21 @@ client.once(Events.ClientReady, (readyClient) => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
+  if (interaction.isButton()) {
+    const commandName = interaction.customId.split(':')[0];
+    const command = commands.get(commandName);
+
+    if (!command?.handleButton) return;
+
+    try {
+      await command.handleButton(interaction);
+    } catch (error) {
+      await handleInteractionError(interaction, error);
+    }
+
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) return;
 
   const command = commands.get(interaction.commandName);
@@ -35,21 +50,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
   try {
     await command.execute(interaction);
   } catch (error) {
-    console.error(error);
+    await handleInteractionError(interaction, error);
+  }
+});
 
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        content: 'There was an error while running this command.',
-        ephemeral: true,
-      });
-      return;
-    }
+async function handleInteractionError(interaction, error) {
+  console.error(error);
 
-    await interaction.reply({
+  if (interaction.replied || interaction.deferred) {
+    await interaction.followUp({
       content: 'There was an error while running this command.',
       ephemeral: true,
     });
+    return;
   }
-});
+
+  await interaction.reply({
+    content: 'There was an error while running this command.',
+    ephemeral: true,
+  });
+}
 
 client.login(process.env.DISCORD_TOKEN);
