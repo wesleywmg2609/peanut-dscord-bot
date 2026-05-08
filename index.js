@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client, Events, GatewayIntentBits, MessageFlags } from 'discord.js';
 import { loadCommands } from './utils/load-commands.js';
+import { schedulePendingReminders } from './utils/reminder-scheduler.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const commandsPath = path.join(__dirname, 'commands');
@@ -22,8 +23,10 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
 
-client.once(Events.ClientReady, (readyClient) => {
+client.once(Events.ClientReady, async (readyClient) => {
   console.log(`Logged in as ${readyClient.user.tag}`);
+  await schedulePendingReminders(client);
+  console.log('Pending reminders scheduled.');
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
