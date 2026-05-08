@@ -17,10 +17,10 @@ export async function execute(interaction) {
   }
 
   const description = reminders
-    .map(([reminderId, reminder], index) => {
+    .map(([, reminder], index) => {
       const remindAt = Math.floor(reminder.remindAt / 1000);
 
-      return `${index + 1}. ${reminder.message}\nID: ${reminderId}\nWhen: <t:${remindAt}:R>`;
+      return `${index + 1}. ${reminder.message}\nWhen: <t:${remindAt}:R>\nSet in: ${reminder.guildName}`;
     })
     .join('\n\n');
 
