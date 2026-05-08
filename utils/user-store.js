@@ -14,6 +14,10 @@ export async function getUser(userId) {
   };
 }
 
+export async function getUsers() {
+  return readUsers();
+}
+
 export async function updateUser(userId, update) {
   const users = await readUsers();
   const currentUser = users[userId] ?? {
