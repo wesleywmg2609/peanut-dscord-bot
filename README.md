@@ -63,6 +63,11 @@ Peanut reads secrets and IDs from `.env`.
 DISCORD_TOKEN=your_bot_token_here
 CLIENT_ID=your_application_id_here
 GUILD_ID=your_test_server_id_here
+COMMAND_DEPLOY_SCOPE=guild
 ```
+
+Use `COMMAND_DEPLOY_SCOPE=guild` while developing. Guild commands update quickly and only affect one server.
+
+Use `COMMAND_DEPLOY_SCOPE=global` when you want Peanut's commands available in every server where the bot is installed. Global command updates can take longer to appear.
 
 Do not upload `.env` to GitHub. Use `.env.example` as the public template.
