@@ -2,25 +2,25 @@ import 'dotenv/config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REST, Routes } from 'discord.js';
+import { getDeployEnv } from './utils/env.js';
 import { loadCommands } from './utils/load-commands.js';
 
+const env = getDeployEnv();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const commandsPath = path.join(__dirname, 'commands');
 const loadedCommands = await loadCommands(commandsPath);
 const commands = loadedCommands.map((command) =>
   command.data.toJSON(),
 );
-const deployScope = process.env.COMMAND_DEPLOY_SCOPE ?? 'guild';
 
-const rest = new REST().setToken(process.env.DISCORD_TOKEN);
+const rest = new REST().setToken(env.discordToken);
 const route =
-  deployScope === 'global'
-    ? Routes.applicationCommands(process.env.CLIENT_ID)
-    : Routes.applicationGuildCommands(
-        process.env.CLIENT_ID,
-        process.env.GUILD_ID,
-      );
+  env.commandDeployScope === 'global'
+    ? Routes.applicationCommands(env.clientId)
+    : Routes.applicationGuildCommands(env.clientId, env.guildId);
 
 await rest.put(route, { body: commands });
 
-console.log(`Slash commands registered: ${commands.length} (${deployScope})`);
+console.log(
+  `Slash commands registered: ${commands.length} (${env.commandDeployScope})`,
+);

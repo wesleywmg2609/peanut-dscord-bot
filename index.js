@@ -2,9 +2,11 @@ import 'dotenv/config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client, Events, GatewayIntentBits, MessageFlags } from 'discord.js';
+import { getBotEnv } from './utils/env.js';
 import { loadCommands } from './utils/load-commands.js';
 import { schedulePendingReminders } from './utils/reminder-scheduler.js';
 
+const env = getBotEnv();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const commandsPath = path.join(__dirname, 'commands');
 const loadedCommands = await loadCommands(commandsPath);
@@ -89,4 +91,4 @@ async function handleInteractionError(interaction, error) {
   });
 }
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(env.discordToken);
