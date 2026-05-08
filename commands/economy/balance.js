@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { getUser } from '../utils/user-store.js';
+import { getUser } from '../../utils/user-store.js';
 
 export const data = new SlashCommandBuilder()
   .setName('balance')

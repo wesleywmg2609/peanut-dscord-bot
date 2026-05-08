@@ -5,7 +5,7 @@ import {
   EmbedBuilder,
   SlashCommandBuilder,
 } from 'discord.js';
-import { createPoll, getPoll, updatePoll } from '../utils/poll-store.js';
+import { createPoll, getPoll, updatePoll } from '../../utils/poll-store.js';
 
 export const data = new SlashCommandBuilder()
   .setName('poll')

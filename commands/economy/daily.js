@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { updateUser } from '../utils/user-store.js';
+import { updateUser } from '../../utils/user-store.js';
 
 const dailyAmount = 100;
 const dailyCooldown = 24 * 60 * 60 * 1000;

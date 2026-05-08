@@ -1,20 +1,14 @@
 import 'dotenv/config';
-import { readdir } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { Client, GatewayIntentBits, Events } from 'discord.js';
+import { loadCommands } from './utils/load-commands.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const commandsPath = path.join(__dirname, 'commands');
-const commandFiles = (await readdir(commandsPath)).filter((file) =>
-  file.endsWith('.js'),
-);
 const commands = new Map();
 
-for (const file of commandFiles) {
-  const filePath = path.join(commandsPath, file);
-  const command = await import(pathToFileURL(filePath));
-
+for (const command of await loadCommands(commandsPath)) {
   commands.set(command.data.name, command);
 }
 

@@ -1,5 +1,5 @@
 import { EmbedBuilder, SlashCommandBuilder } from 'discord.js';
-import { getUsers } from '../utils/user-store.js';
+import { getUsers } from '../../utils/user-store.js';
 
 export const data = new SlashCommandBuilder()
   .setName('leaderboard')
