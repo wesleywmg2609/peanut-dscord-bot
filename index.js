@@ -48,7 +48,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!command) return;
 
   try {
-    await command.execute(interaction);
+    await command.execute(interaction, { commands });
   } catch (error) {
     await handleInteractionError(interaction, error);
   }
