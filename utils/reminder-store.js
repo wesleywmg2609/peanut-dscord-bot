@@ -27,6 +27,16 @@ export async function getReminders() {
   return readReminders();
 }
 
+export async function getUserReminders(userId) {
+  const reminders = await readReminders();
+
+  return Object.entries(reminders)
+    .filter(([, reminder]) => reminder.userId === userId)
+    .sort(([, firstReminder], [, secondReminder]) => {
+      return firstReminder.remindAt - secondReminder.remindAt;
+    });
+}
+
 async function readReminders() {
   try {
     const data = await readFile(remindersPath, 'utf8');
