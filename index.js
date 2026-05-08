@@ -5,6 +5,7 @@ import { Client, Events, GatewayIntentBits, MessageFlags } from 'discord.js';
 import { getBotEnv } from './utils/env.js';
 import { loadCommands } from './utils/load-commands.js';
 import { schedulePendingReminders } from './utils/reminder-scheduler.js';
+import { handleTempVoiceStateUpdate } from './utils/temp-voice.js';
 
 const env = getBotEnv();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -22,7 +23,7 @@ for (const command of loadedCommands) {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 });
 
 client.once(Events.ClientReady, async (readyClient) => {
@@ -71,6 +72,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
     await command.execute(interaction, { commands });
   } catch (error) {
     await handleInteractionError(interaction, error);
+  }
+});
+
+client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
+  try {
+    await handleTempVoiceStateUpdate(oldState, newState, env);
+  } catch (error) {
+    console.error(error);
   }
 });
 

@@ -64,10 +64,13 @@ DISCORD_TOKEN=your_bot_token_here
 CLIENT_ID=your_application_id_here
 GUILD_ID=your_test_server_id_here
 COMMAND_DEPLOY_SCOPE=guild
+TEMP_VOICE_CHANNEL_ID=your_join_to_create_voice_channel_id_here
 ```
 
 Use `COMMAND_DEPLOY_SCOPE=guild` while developing. Guild commands update quickly and only affect one server.
 
 Use `COMMAND_DEPLOY_SCOPE=global` when you want Peanut's commands available in every server where the bot is installed. Global command updates can take longer to appear.
+
+Set `TEMP_VOICE_CHANNEL_ID` to a voice channel ID if you want Peanut to create a temporary voice channel whenever a user joins that channel. Leave it empty to disable this feature.
 
 Do not upload `.env` to GitHub. Use `.env.example` as the public template.
