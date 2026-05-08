@@ -1,15 +1,21 @@
 import { ChannelType, PermissionsBitField } from 'discord.js';
+import { getGuildSettings } from './guild-settings-store.js';
 
 const tempVoiceChannels = new Map();
 
 export async function handleTempVoiceStateUpdate(oldState, newState, config) {
-  await handleJoinToCreate(newState, config);
+  await handleJoinToCreate(newState);
   await handleTempChannelCleanup(oldState);
 }
 
-async function handleJoinToCreate(newState, config) {
-  if (!config.tempVoiceChannelId) return;
-  if (newState.channelId !== config.tempVoiceChannelId) return;
+async function handleJoinToCreate(newState) {
+  if (!newState.guild) return;
+
+  const settings = await getGuildSettings(newState.guild.id);
+  const tempVoiceChannelId = settings.tempVoiceChannelId;
+
+  if (!tempVoiceChannelId) return;
+  if (newState.channelId !== tempVoiceChannelId) return;
   if (!newState.channel) return;
 
   const member = newState.member;

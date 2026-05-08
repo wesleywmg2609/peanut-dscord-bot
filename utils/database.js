@@ -28,4 +28,9 @@ db.exec(`
     created_at INTEGER NOT NULL,
     votes TEXT NOT NULL DEFAULT '{}'
   );
+
+  CREATE TABLE IF NOT EXISTS guild_settings (
+    guild_id TEXT PRIMARY KEY,
+    temp_voice_channel_id TEXT
+  );
 `);
