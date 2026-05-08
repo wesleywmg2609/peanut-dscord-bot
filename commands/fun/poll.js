@@ -3,6 +3,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { createPoll, getPoll, updatePoll } from '../../utils/poll-store.js';
@@ -38,7 +39,7 @@ export async function handleButton(interaction) {
   if (!poll) {
     await interaction.reply({
       content: 'This poll is no longer active.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }

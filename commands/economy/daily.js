@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { updateUser } from '../../utils/user-store.js';
 
 const dailyAmount = 100;
@@ -31,7 +31,7 @@ export async function execute(interaction) {
 
     await interaction.reply({
       content: `You already claimed your daily reward. Try again <t:${nextDaily}:R>.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
