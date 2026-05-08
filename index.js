@@ -2,6 +2,7 @@ import 'dotenv/config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client, Events, GatewayIntentBits, MessageFlags } from 'discord.js';
+import { logError } from './utils/bot-logger.js';
 import { getBotEnv } from './utils/env.js';
 import { loadCommands } from './utils/load-commands.js';
 import { schedulePendingReminders } from './utils/reminder-scheduler.js';
@@ -80,11 +81,18 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
     await handleTempVoiceStateUpdate(oldState, newState, env);
   } catch (error) {
     console.error(error);
+    await logError(newState.client, newState.guild.id, error, 'VoiceStateUpdate');
   }
 });
 
 async function handleInteractionError(interaction, error) {
   console.error(error);
+  await logError(
+    interaction.client,
+    interaction.guildId,
+    error,
+    `/${interaction.commandName ?? interaction.customId}`,
+  );
 
   if (interaction.replied || interaction.deferred) {
     await interaction.followUp({
