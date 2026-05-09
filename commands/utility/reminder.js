@@ -14,6 +14,7 @@ import {
     cancelReminder,
     scheduleReminder,
 } from '../../utils/reminder-scheduler.js';
+import { formatDate, truncateText } from '../../utils/text.js';
 
 const maxMinutes = 60 * 24 * 7;
 
@@ -205,19 +206,4 @@ export async function handleSelectMenu(interaction) {
         embeds: [cancelledEmbed],
         components: [],
     });
-}
-
-function truncateText(text, maxLength) {
-    if (text.length <= maxLength) {
-        return text;
-    }
-
-    return `${text.slice(0, maxLength - 3)}...`;
-}
-
-function formatDate(timestamp) {
-    return new Intl.DateTimeFormat('en-US', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-    }).format(timestamp);
 }

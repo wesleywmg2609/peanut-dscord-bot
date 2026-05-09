@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { getGuildSettings } from './guild-settings-store.js';
+import { truncateText } from './text.js';
 
 export async function logError(client, guildId, error, context) {
   if (!guildId) return;
@@ -28,12 +29,4 @@ export async function logError(client, guildId, error, context) {
     .setTimestamp();
 
   await channel.send({ embeds: [embed] }).catch(() => null);
-}
-
-function truncateText(text, maxLength) {
-  if (text.length <= maxLength) {
-    return text;
-  }
-
-  return `${text.slice(0, maxLength - 3)}...`;
 }
