@@ -9,18 +9,12 @@ const env = getDeployEnv();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const commandsPath = path.join(__dirname, 'commands');
 const loadedCommands = await loadCommands(commandsPath);
-const commands = loadedCommands.map((command) =>
-  command.data.toJSON(),
-);
+const commands = loadedCommands.map((command) => command.data.toJSON());
 
 const rest = new REST().setToken(env.discordToken);
-const route =
-  env.commandDeployScope === 'global'
-    ? Routes.applicationCommands(env.clientId)
-    : Routes.applicationGuildCommands(env.clientId, env.guildId);
 
-await rest.put(route, { body: commands });
+await rest.put(Routes.applicationCommands(env.clientId), {
+  body: commands,
+});
 
-console.log(
-  `Slash commands registered: ${commands.length} (${env.commandDeployScope})`,
-);
+console.log(`Global slash commands registered: ${commands.length}`);
