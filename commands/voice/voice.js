@@ -23,6 +23,17 @@ export const data = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) =>
     subcommand
+      .setName('kick')
+      .setDescription('Removes a user from your temporary voice channel.')
+      .addUserOption((option) =>
+        option
+          .setName('user')
+          .setDescription('The user to kick.')
+          .setRequired(true),
+      ),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
       .setName('limit')
       .setDescription('Sets the user limit for your temporary voice channel.')
       .addIntegerOption((option) =>
@@ -41,8 +52,14 @@ export const data = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) =>
     subcommand
-      .setName('unlock')
-      .setDescription('Allows others to join your temporary voice channel.'),
+      .setName('permit')
+      .setDescription('Allows a user to join your locked temporary voice channel.')
+      .addUserOption((option) =>
+        option
+          .setName('user')
+          .setDescription('The user to permit.')
+          .setRequired(true),
+      ),
   )
   .addSubcommand((subcommand) =>
     subcommand
@@ -56,7 +73,24 @@ export const data = new SlashCommandBuilder()
           .setMaxLength(100)
           .setRequired(true),
       ),
-  );
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName('transfer')
+      .setDescription('Transfers ownership of your temporary voice channel.')
+      .addUserOption((option) =>
+        option
+          .setName('user')
+          .setDescription('The new owner.')
+          .setRequired(true),
+      ),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName('unlock')
+      .setDescription('Allows others to join your temporary voice channel.'),
+  )
+  ;
 
 export async function execute(interaction) {
   if (!interaction.inGuild()) {
@@ -66,6 +100,8 @@ export async function execute(interaction) {
     });
     return;
   }
+
+  const subcommand = interaction.options.getSubcommand();
 
   if (subcommand === 'claim') {
     await claimChannel(interaction);
@@ -82,10 +118,13 @@ export async function execute(interaction) {
     return;
   }
 
-  const subcommand = interaction.options.getSubcommand();
+  if (subcommand === 'kick') {
+    await kickUser(interaction, channel);
+    return;
+  }
 
   if (subcommand === 'limit') {
-    await setUserLimit(interaction, channel);
+    await limitUsers(interaction, channel);
   }
 
   if (subcommand === 'lock') {
@@ -93,13 +132,23 @@ export async function execute(interaction) {
     return;
   }
 
-  if (subcommand === 'unlock') {
-    await unlockChannel(interaction, channel);
+  if (subcommand === 'permit') {
+    await permitUser(interaction, channel);
     return;
   }
 
   if (subcommand === 'rename') {
     await renameChannel(interaction, channel);
+    return;
+  }
+
+  if (subcommand === 'transfer') {
+    await transferChannel(interaction, channel);
+    return;
+  }
+
+  if (subcommand === 'unlock') {
+    await unlockChannel(interaction, channel);
     return;
   }
 }
@@ -155,7 +204,28 @@ async function claimChannel(interaction) {
   );
 }
 
-async function setUserLimit(interaction, channel) {
+async function kickUser(interaction, channel) {
+  const user = interaction.options.getUser('user', true);
+  const member = await interaction.guild.members.fetch(user.id).catch(() => null);
+
+  if (!member || member.voice.channelId !== channel.id) {
+    await interaction.reply({
+      content: 'That user is not in your temporary voice channel.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  await member.voice.disconnect('Removed from temporary voice channel by owner.');
+
+  await replyWithSuccess(
+    interaction,
+    'User Kicked',
+    `${user} was removed from ${channel}.`,
+  );
+}
+
+async function limitUsers(interaction, channel) {
   const userLimit = interaction.options.getInteger('count', true);
 
   await channel.setUserLimit(
@@ -193,6 +263,53 @@ async function lockChannel(interaction, channel) {
   );
 }
 
+async function permitUser(interaction, channel) {
+  const user = interaction.options.getUser('user', true);
+
+  await channel.permissionOverwrites.edit(user.id, {
+    ViewChannel: true,
+    Connect: true,
+  });
+
+  await replyWithSuccess(
+    interaction,
+    'User Permitted',
+    `${user} can now join ${channel}.`,
+  );
+}
+
+async function renameChannel(interaction, channel) {
+  const name = interaction.options.getString('name', true);
+
+  await channel.setName(name, 'Temporary voice channel renamed by owner.');
+
+  await replyWithSuccess(interaction, 'Voice Channel Renamed', `Renamed to ${channel}.`);
+}
+
+async function transferChannel(interaction, channel) {
+  const user = interaction.options.getUser('user', true);
+  const member = await interaction.guild.members.fetch(user.id).catch(() => null);
+
+  if (!member || member.voice.channelId !== channel.id) {
+    await interaction.reply({
+      content: 'The new owner must be inside your temporary voice channel.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  await updateTempVoiceChannel(channel.id, (current) => ({
+    ...current,
+    ownerId: user.id,
+  }));
+
+  await replyWithSuccess(
+    interaction,
+    'Voice Channel Ownership Transferred',
+    `${user} is now the owner of ${channel}.`,
+  );
+}
+
 async function unlockChannel(interaction, channel) {
   try {
     await channel.permissionOverwrites.edit(interaction.guild.id, {
@@ -212,12 +329,4 @@ async function unlockChannel(interaction, channel) {
     'Voice Channel Unlocked',
     'Other users can join your temporary voice channel again.',
   );
-}
-
-async function renameChannel(interaction, channel) {
-  const name = interaction.options.getString('name', true);
-
-  await channel.setName(name, 'Temporary voice channel renamed by owner.');
-
-  await replyWithSuccess(interaction, 'Voice Channel Renamed', `Renamed to ${channel}.`);
 }
