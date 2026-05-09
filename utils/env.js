@@ -1,5 +1,3 @@
-const validDeployScopes = new Set(['guild', 'global']);
-
 export function getBotEnv() {
   return {
     discordToken: getRequiredEnv('DISCORD_TOKEN'),
