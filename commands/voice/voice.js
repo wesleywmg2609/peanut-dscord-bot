@@ -244,7 +244,7 @@ async function limitUsers(interaction, channel) {
 
 async function lockChannel(interaction, channel) {
   try {
-    await channel.permissionOverwrites.edit(interaction.guild.id, {
+    await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
       Connect: false,
     });
   } catch (error) {
@@ -312,7 +312,7 @@ async function transferChannel(interaction, channel) {
 
 async function unlockChannel(interaction, channel) {
   try {
-    await channel.permissionOverwrites.edit(interaction.guild.id, {
+    await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
       Connect: null,
     });
   } catch (error) {

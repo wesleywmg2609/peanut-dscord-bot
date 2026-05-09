@@ -164,6 +164,17 @@ async function removeLogChannel(interaction) {
 async function setTempVoiceChannel(interaction) {
   const channel = interaction.options.getChannel('channel', true);
 
+  await channel.permissionOverwrites.edit(
+    interaction.guild.roles.everyone,
+    {
+      Connect: true,
+      Speak: false,
+    },
+    {
+      reason: 'Configured as temporary voice lobby channel.',
+    },
+  );
+
   await updateGuildSettings(interaction.guildId, (settings) => {
     return {
       ...settings,
