@@ -42,20 +42,3 @@ db.exec(`
     votes TEXT NOT NULL DEFAULT '{}'
   );
 `);
-
-const guildSettingsColumns = db
-  .prepare('PRAGMA table_info(guild_settings)')
-  .all()
-  .map((column) => column.name);
-
-if (!guildSettingsColumns.includes('error_log_channel_id')) {
-  db.exec('ALTER TABLE guild_settings ADD COLUMN error_log_channel_id TEXT');
-}
-
-if (guildSettingsColumns.includes('log_channel_id')) {
-  db.exec(`
-    UPDATE guild_settings
-    SET error_log_channel_id = COALESCE(error_log_channel_id, log_channel_id)
-  `);
-  db.exec('ALTER TABLE guild_settings DROP COLUMN log_channel_id');
-}
