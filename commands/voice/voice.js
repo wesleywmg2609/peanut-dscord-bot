@@ -9,20 +9,29 @@ import {
   replyWithPermissionAccessError,
   replyWithSuccess,
 } from '../../utils/discord-response.js';
+import {
+  getTempVoiceChannel,
+  updateTempVoiceChannel,
+} from '../../utils/temp-voice-store.js';
 
 export const data = new SlashCommandBuilder()
   .setName('voice')
   .setDescription('Manages your temporary voice channel.')
   .addSubcommand((subcommand) =>
     subcommand
-      .setName('rename')
-      .setDescription('Renames your temporary voice channel.')
-      .addStringOption((option) =>
+      .setName('claim')
+      .setDescription('Claims ownership of this temporary voice channel if the owner left.'),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName('limit')
+      .setDescription('Sets the user limit for your temporary voice channel.')
+      .addIntegerOption((option) =>
         option
-          .setName('name')
-          .setDescription('The new channel name.')
-          .setMinLength(1)
-          .setMaxLength(100)
+          .setName('count')
+          .setDescription('The user limit. Use 0 for unlimited.')
+          .setMinValue(0)
+          .setMaxValue(99)
           .setRequired(true),
       ),
   )
@@ -38,14 +47,14 @@ export const data = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) =>
     subcommand
-      .setName('limit')
-      .setDescription('Sets the user limit for your temporary voice channel.')
-      .addIntegerOption((option) =>
+      .setName('rename')
+      .setDescription('Renames your temporary voice channel.')
+      .addStringOption((option) =>
         option
-          .setName('count')
-          .setDescription('The user limit. Use 0 for unlimited.')
-          .setMinValue(0)
-          .setMaxValue(99)
+          .setName('name')
+          .setDescription('The new channel name.')
+          .setMinLength(1)
+          .setMaxLength(100)
           .setRequired(true),
       ),
   );
@@ -71,9 +80,13 @@ export async function execute(interaction) {
 
   const subcommand = interaction.options.getSubcommand();
 
-  if (subcommand === 'rename') {
-    await renameChannel(interaction, channel);
+  if (subcommand === 'claim') {
+    await claimChannel(interaction);
     return;
+  }
+
+  if (subcommand === 'limit') {
+    await setUserLimit(interaction, channel);
   }
 
   if (subcommand === 'lock') {
@@ -86,17 +99,78 @@ export async function execute(interaction) {
     return;
   }
 
-  if (subcommand === 'limit') {
-    await setUserLimit(interaction, channel);
+  if (subcommand === 'rename') {
+    await renameChannel(interaction, channel);
+    return;
   }
 }
 
-async function renameChannel(interaction, channel) {
-  const name = interaction.options.getString('name', true);
+async function claimChannel(interaction) {
+  const channel = interaction.member.voice.channel;
 
-  await channel.setName(name, 'Temporary voice channel renamed by owner.');
+  if (!channel) {
+    await interaction.reply({
+      content: 'You must be in a temporary voice channel to claim it.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
 
-  await replyWithSuccess(interaction, 'Voice Channel Renamed', `Renamed to ${channel}.`);
+  const tempChannel = await getTempVoiceChannel(channel.id);
+
+  if (!tempChannel) {
+    await interaction.reply({
+      content: 'This is not a temporary voice channel.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  if (tempChannel.ownerId === interaction.user.id) {
+    await interaction.reply({
+      content: 'You already own this temporary voice channel.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const ownerStillInside = channel.members.has(tempChannel.ownerId);
+
+  if (ownerStillInside) {
+    await interaction.reply({
+      content: 'You cannot claim this channel while the owner is still inside.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  await updateTempVoiceChannel(channel.id, (current) => ({
+    ...current,
+    ownerId: interaction.user.id,
+  }));
+
+  await replyWithSuccess(
+    interaction,
+    'Voice Channel Claimed',
+    `You are now the owner of ${channel}.`,
+  );
+}
+
+async function setUserLimit(interaction, channel) {
+  const userLimit = interaction.options.getInteger('count', true);
+
+  await channel.setUserLimit(
+    userLimit,
+    'Temporary voice channel user limit changed by owner.',
+  );
+
+  await replyWithSuccess(
+    interaction,
+    'Voice Channel Limit Updated',
+    userLimit === 0
+      ? 'User limit removed.'
+      : `User limit set to ${userLimit}.`,
+  );
 }
 
 async function lockChannel(interaction, channel) {
@@ -141,19 +215,10 @@ async function unlockChannel(interaction, channel) {
   );
 }
 
-async function setUserLimit(interaction, channel) {
-  const userLimit = interaction.options.getInteger('count', true);
+async function renameChannel(interaction, channel) {
+  const name = interaction.options.getString('name', true);
 
-  await channel.setUserLimit(
-    userLimit,
-    'Temporary voice channel user limit changed by owner.',
-  );
+  await channel.setName(name, 'Temporary voice channel renamed by owner.');
 
-  await replyWithSuccess(
-    interaction,
-    'Voice Channel Limit Updated',
-    userLimit === 0
-      ? 'User limit removed.'
-      : `User limit set to ${userLimit}.`,
-  );
+  await replyWithSuccess(interaction, 'Voice Channel Renamed', `Renamed to ${channel}.`);
 }

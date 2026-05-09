@@ -41,3 +41,31 @@ export async function getTempVoiceChannel(channelId) {
 export async function deleteTempVoiceChannel(channelId) {
   db.prepare('DELETE FROM temp_voice_channels WHERE channel_id = ?').run(channelId);
 }
+
+export async function updateTempVoiceChannel(channelId, update) {
+  const tempVoiceChannel = await getTempVoiceChannel(channelId);
+
+  if (!tempVoiceChannel) {
+    return null;
+  }
+
+  const updatedTempVoiceChannel = update(tempVoiceChannel);
+
+  db.prepare(
+    `
+      UPDATE temp_voice_channels
+      SET
+        guild_id = ?,
+        owner_id = ?,
+        created_at = ?
+      WHERE channel_id = ?
+    `,
+  ).run(
+    updatedTempVoiceChannel.guildId,
+    updatedTempVoiceChannel.ownerId,
+    updatedTempVoiceChannel.createdAt,
+    channelId,
+  );
+
+  return updatedTempVoiceChannel;
+}
