@@ -1,17 +1,29 @@
 import { db } from './database.js';
 
+/**
+ * @typedef {Object} GuildSettings
+ * @property {string | null} tempVoiceChannelId
+ * @property {string | null} errorLogChannelId
+ */
+
+/**
+ * @param {string} guildId
+ * @returns {Promise<GuildSettings>}
+ */
 export async function getGuildSettings(guildId) {
-  const settings = db
-    .prepare(
-      `
-        SELECT
-          temp_voice_channel_id AS tempVoiceChannelId,
-          error_log_channel_id AS errorLogChannelId
-        FROM guild_settings
-        WHERE guild_id = ?
-      `,
-    )
-    .get(guildId);
+  const settings = /** @type {GuildSettings | undefined} */ (
+    db
+      .prepare(
+        `
+          SELECT
+            temp_voice_channel_id AS tempVoiceChannelId,
+            error_log_channel_id AS errorLogChannelId
+          FROM guild_settings
+          WHERE guild_id = ?
+        `,
+      )
+      .get(guildId)
+  );
 
   return settings ?? {
     tempVoiceChannelId: null,

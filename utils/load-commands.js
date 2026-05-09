@@ -8,7 +8,7 @@ export async function loadCommands(commandsPath) {
   const commandNames = new Set();
 
   for (const filePath of commandFiles) {
-    const command = await import(pathToFileURL(filePath));
+    const command = await import(pathToFileURL(filePath).href);
     const category = getCommandCategory(commandsPath, filePath);
     const loadedCommand = {
       ...command,
