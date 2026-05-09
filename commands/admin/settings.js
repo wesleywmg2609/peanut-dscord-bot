@@ -20,29 +20,7 @@ export const data = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addSubcommand((subcommand) =>
     subcommand
-      .setName('view')
-      .setDescription('Shows current server settings.'),
-  )
-  .addSubcommand((subcommand) =>
-    subcommand
-      .setName('temp-voice')
-      .setDescription('Sets the join-to-create voice channel.')
-      .addChannelOption((option) =>
-        option
-          .setName('channel')
-          .setDescription('The voice channel users join to create temp rooms.')
-          .addChannelTypes(ChannelType.GuildVoice)
-          .setRequired(true),
-      ),
-  )
-  .addSubcommand((subcommand) =>
-    subcommand
-      .setName('clear-temp-voice')
-      .setDescription('Disables temporary voice channel creation.'),
-  )
-  .addSubcommand((subcommand) =>
-    subcommand
-      .setName('error-log')
+      .setName('set-error-log')
       .setDescription('Sets the error log channel.')
       .addChannelOption((option) =>
         option
@@ -54,9 +32,32 @@ export const data = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) =>
     subcommand
-      .setName('clear-error-log')
+      .setName('remove-error-log')
       .setDescription('Disables error log messages.'),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName('set-temp-voice')
+      .setDescription('Sets the join-to-create voice channel.')
+      .addChannelOption((option) =>
+        option
+          .setName('channel')
+          .setDescription('The voice channel users join to create temp rooms.')
+          .addChannelTypes(ChannelType.GuildVoice)
+          .setRequired(true),
+      ),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName('remove-temp-voice')
+      .setDescription('Disables temporary voice channel creation.'),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName('view')
+      .setDescription('Shows current server settings.'),
   );
+
 
 export async function execute(interaction) {
   if (!interaction.inGuild()) {
