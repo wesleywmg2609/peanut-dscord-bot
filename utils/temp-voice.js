@@ -1,7 +1,22 @@
-import { ChannelType, PermissionsBitField } from 'discord.js';
+import { ChannelType } from 'discord.js';
 import { getGuildSettings } from './guild-settings-store.js';
+import { isAccessError } from './discord-response.js';
 
 const tempVoiceChannels = new Map();
+
+export function getOwnedTempVoiceChannel(member) {
+  const channelId = member.voice.channelId;
+
+  if (!channelId) return null;
+
+  const tempChannel = tempVoiceChannels.get(channelId);
+
+  if (!tempChannel || tempChannel.ownerId !== member.id) {
+    return null;
+  }
+
+  return member.voice.channel;
+}
 
 export async function handleTempVoiceStateUpdate(oldState, newState, config) {
   await handleJoinToCreate(newState);
@@ -25,16 +40,6 @@ async function handleJoinToCreate(newState) {
     name: `${member.displayName}'s Room`,
     type: ChannelType.GuildVoice,
     parent: parentId,
-    permissionOverwrites: [
-      {
-        id: member.id,
-        allow: [
-          PermissionsBitField.Flags.Connect,
-          PermissionsBitField.Flags.ManageChannels,
-          PermissionsBitField.Flags.MoveMembers,
-        ],
-      },
-    ],
   });
 
   tempVoiceChannels.set(channel.id, {
@@ -51,6 +56,18 @@ async function handleTempChannelCleanup(oldState) {
   if (!oldState.channel) return;
   if (oldState.channel.members.size > 0) return;
 
-  tempVoiceChannels.delete(oldState.channelId);
-  await oldState.channel.delete('Temporary voice channel is empty.');
+  if (!oldState.channel.deletable) {
+    return;
+  }
+
+  try {
+    await oldState.channel.delete('Temporary voice channel is empty.');
+    tempVoiceChannels.delete(oldState.channelId);
+  } catch (error) {
+    if (isAccessError(error)) {
+      return;
+    }
+
+    throw error;
+  }
 }
