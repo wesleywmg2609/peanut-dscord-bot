@@ -20,6 +20,11 @@ export const data = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addSubcommand((subcommand) =>
     subcommand
+      .setName('view')
+      .setDescription('Shows current server settings.'),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
       .setName('set-error-log')
       .setDescription('Sets the error log channel.')
       .addChannelOption((option) =>
@@ -51,11 +56,6 @@ export const data = new SlashCommandBuilder()
     subcommand
       .setName('remove-temp-voice')
       .setDescription('Disables temporary voice channel creation.'),
-  )
-  .addSubcommand((subcommand) =>
-    subcommand
-      .setName('view')
-      .setDescription('Shows current server settings.'),
   );
 
 
@@ -71,31 +71,31 @@ export async function execute(interaction) {
   const subcommand = interaction.options.getSubcommand();
 
   if (subcommand === 'view') {
-    await showSettings(interaction);
+    await viewSettings(interaction);
     return;
   }
 
-  if (subcommand === 'temp-voice') {
+  if (subcommand === 'set-temp-voice') {
     await setTempVoiceChannel(interaction);
     return;
   }
 
-  if (subcommand === 'clear-temp-voice') {
-    await clearTempVoiceChannel(interaction);
+  if (subcommand === 'remove-temp-voice') {
+    await removeTempVoiceChannel(interaction);
     return;
   }
 
-  if (subcommand === 'error-log') {
+  if (subcommand === 'set-error-log') {
     await setLogChannel(interaction);
     return;
   }
 
-  if (subcommand === 'clear-error-log') {
-    await clearLogChannel(interaction);
+  if (subcommand === 'remove-error-log') {
+    await removeLogChannel(interaction);
   }
 }
 
-async function showSettings(interaction) {
+async function viewSettings(interaction) {
   const settings = await getGuildSettings(interaction.guildId);
   const tempVoiceValue = settings.tempVoiceChannelId
     ? `<#${settings.tempVoiceChannelId}>`
@@ -142,7 +142,7 @@ async function setLogChannel(interaction) {
   });
 }
 
-async function clearLogChannel(interaction) {
+async function removeLogChannel(interaction) {
   await updateGuildSettings(interaction.guildId, (settings) => {
     return {
       ...settings,
@@ -182,7 +182,7 @@ async function setTempVoiceChannel(interaction) {
   });
 }
 
-async function clearTempVoiceChannel(interaction) {
+async function removeTempVoiceChannel(interaction) {
   await updateGuildSettings(interaction.guildId, (settings) => {
     return {
       ...settings,
