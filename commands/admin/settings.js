@@ -124,6 +124,17 @@ async function viewSettings(interaction) {
 async function setLogChannel(interaction) {
   const channel = interaction.options.getChannel('channel', true);
 
+  await channel.permissionOverwrites.edit(
+    interaction.guild.roles.everyone,
+    {
+      ViewChannel: false,
+      ReadMessageHistory: false,
+    },
+    {
+      reason: 'Configured as private error log channel.',
+    },
+  );
+
   await updateGuildSettings(interaction.guildId, (settings) => {
     return {
       ...settings,
@@ -169,6 +180,7 @@ async function setTempVoiceChannel(interaction) {
     {
       Connect: true,
       Speak: false,
+      SendMessages: false,
     },
     {
       reason: 'Configured as temporary voice lobby channel.',
