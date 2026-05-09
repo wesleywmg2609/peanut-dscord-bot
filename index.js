@@ -5,7 +5,6 @@ import { Client, Events, GatewayIntentBits, MessageFlags } from 'discord.js';
 import { logError } from './utils/bot-logger.js';
 import { getBotEnv } from './utils/env.js';
 import { loadCommands } from './utils/load-commands.js';
-import { schedulePendingReminders } from './utils/reminder-scheduler.js';
 import { handleTempVoiceStateUpdate } from './utils/temp-voice.js';
 
 const env = getBotEnv();
@@ -29,8 +28,6 @@ const client = new Client({
 
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`Logged in as ${readyClient.user.tag}`);
-  await schedulePendingReminders(client);
-  console.log('Pending reminders scheduled.');
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
