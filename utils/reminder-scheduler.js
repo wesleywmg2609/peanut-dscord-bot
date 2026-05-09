@@ -1,5 +1,5 @@
-import { EmbedBuilder } from 'discord.js';
 import { deleteReminder, getReminders } from './reminder-store.js';
+import { createInfoEmbed } from './embed.js';
 
 const scheduledReminders = new Map();
 
@@ -44,10 +44,7 @@ async function sendReminder(client, reminderId, reminder) {
 
   try {
     const user = await client.users.fetch(reminder.userId);
-    const embed = new EmbedBuilder()
-      .setColor(0xf1c40f)
-      .setTitle('Reminder')
-      .setDescription(reminder.message)
+    const embed = createInfoEmbed('Reminder', reminder.message)
       .addFields({
         name: 'Set in',
         value: reminder.guildName,

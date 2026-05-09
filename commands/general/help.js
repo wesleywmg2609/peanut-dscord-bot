@@ -1,4 +1,5 @@
-import { EmbedBuilder, MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { createInfoEmbed } from '../../utils/embed.js';
 
 export const data = new SlashCommandBuilder()
   .setName('help')
@@ -38,10 +39,10 @@ export async function execute(interaction, { commands }) {
     })
     .join('\n\n');
 
-  const embed = new EmbedBuilder()
-    .setColor(0x5865f2)
-    .setTitle('Available Commands')
-    .setDescription(`\`\`\`\n${commandList}\n\`\`\``);
+  const embed = createInfoEmbed(
+    'Available Commands',
+    `\`\`\`\n${commandList}\n\`\`\``,
+  );
 
   await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }

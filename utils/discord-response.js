@@ -1,4 +1,5 @@
-import { EmbedBuilder, MessageFlags } from 'discord.js';
+import { MessageFlags } from 'discord.js';
+import { createSuccessEmbed } from './embed.js';
 
 export function isAccessError(error) {
   return error.code === 50001 || error.code === 50013;
@@ -17,10 +18,7 @@ export async function replyWithSuccess(
   title,
   description,
 ) {
-  const embed = new EmbedBuilder()
-    .setColor(0x2ecc71)
-    .setTitle(title)
-    .setDescription(description);
+  const embed = createSuccessEmbed(title, description);
 
   await interaction.reply({
     embeds: [embed],
