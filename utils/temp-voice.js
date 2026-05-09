@@ -1,15 +1,18 @@
 import { ChannelType } from 'discord.js';
 import { getGuildSettings } from './guild-settings-store.js';
 import { isAccessError } from './discord-response.js';
+import {
+  createTempVoiceChannel,
+  deleteTempVoiceChannel,
+  getTempVoiceChannel,
+} from './temp-voice-store.js';
 
-const tempVoiceChannels = new Map();
-
-export function getOwnedTempVoiceChannel(member) {
+export async function getOwnedTempVoiceChannel(member) {
   const channelId = member.voice.channelId;
 
   if (!channelId) return null;
 
-  const tempChannel = tempVoiceChannels.get(channelId);
+  const tempChannel = await getTempVoiceChannel(channelId);
 
   if (!tempChannel || tempChannel.ownerId !== member.id) {
     return null;
@@ -42,9 +45,10 @@ async function handleJoinToCreate(newState) {
     parent: parentId,
   });
 
-  tempVoiceChannels.set(channel.id, {
+  await createTempVoiceChannel(channel.id, {
     ownerId: member.id,
     guildId: guild.id,
+    createdAt: Date.now(),
   });
 
   await member.voice.setChannel(channel);
@@ -52,7 +56,10 @@ async function handleJoinToCreate(newState) {
 
 async function handleTempChannelCleanup(oldState) {
   if (!oldState.channelId) return;
-  if (!tempVoiceChannels.has(oldState.channelId)) return;
+
+  const tempChannel = await getTempVoiceChannel(oldState.channelId);
+  if (!tempChannel) return;
+
   if (!oldState.channel) return;
   if (oldState.channel.members.size > 0) return;
 
@@ -62,7 +69,7 @@ async function handleTempChannelCleanup(oldState) {
 
   try {
     await oldState.channel.delete('Temporary voice channel is empty.');
-    tempVoiceChannels.delete(oldState.channelId);
+    await deleteTempVoiceChannel(oldState.channelId);
   } catch (error) {
     if (isAccessError(error)) {
       return;
