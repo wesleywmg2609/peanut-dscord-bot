@@ -1,5 +1,22 @@
 import { db } from './database.js';
 
+/**
+ * @typedef {Object} Poll
+ * @property {string} question
+ * @property {string} creatorId
+ * @property {number} createdAt
+ * @property {Record<string, string>} votes
+ */
+
+/**
+ * @typedef {Omit<Poll, 'votes'> & { votes: string }} PollRow
+ */
+
+/**
+ * @param {string} pollId
+ * @param {Poll} poll
+ * @returns {Promise<Poll>}
+ */
 export async function createPoll(pollId, poll) {
   db.prepare(
     `
@@ -17,20 +34,26 @@ export async function createPoll(pollId, poll) {
   return poll;
 }
 
+/**
+ * @param {string} pollId
+ * @returns {Promise<Poll | null>}
+ */
 export async function getPoll(pollId) {
-  const poll = db
-    .prepare(
-      `
-        SELECT
-          question,
-          creator_id AS creatorId,
-          created_at AS createdAt,
-          votes
-        FROM polls
-        WHERE id = ?
-      `,
-    )
-    .get(pollId);
+  const poll = /** @type {PollRow | undefined} */ (
+    db
+      .prepare(
+        `
+          SELECT
+            question,
+            creator_id AS creatorId,
+            created_at AS createdAt,
+            votes
+          FROM polls
+          WHERE id = ?
+        `,
+      )
+      .get(pollId)
+  );
 
   if (!poll) {
     return null;
@@ -42,6 +65,11 @@ export async function getPoll(pollId) {
   };
 }
 
+/**
+ * @param {string} pollId
+ * @param {(poll: Poll) => Poll} update
+ * @returns {Promise<Poll | null>}
+ */
 export async function updatePoll(pollId, update) {
   const poll = await getPoll(pollId);
 
