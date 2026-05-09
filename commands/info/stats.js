@@ -1,4 +1,5 @@
-import { EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder } from 'discord.js';
+import { createInfoEmbed } from '../../utils/embed.js';
 
 export const data = new SlashCommandBuilder()
   .setName('stats')
@@ -9,9 +10,7 @@ export async function execute(interaction, { commands }) {
   const memoryUsage = process.memoryUsage();
   const memoryMb = Math.round(memoryUsage.rss / 1024 / 1024);
 
-  const embed = new EmbedBuilder()
-    .setColor(0x5865f2)
-    .setTitle('Peanut Bot Stats')
+  const embed = createInfoEmbed('Peanut Bot Stats')
     .addFields(
       {
         name: 'Uptime',

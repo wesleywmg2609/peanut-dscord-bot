@@ -2,11 +2,14 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
   MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { createPoll, getPoll, updatePoll } from '../../utils/poll-store.js';
+import {
+  createErrorEmbed,
+  createSuccessEmbed,
+} from '../../utils/embed.js';
 
 export const data = new SlashCommandBuilder()
   .setName('poll')
@@ -37,8 +40,13 @@ export async function handleButton(interaction) {
   const poll = await getPoll(pollId);
 
   if (!poll) {
+    const embed = createErrorEmbed(
+      'Poll Not Found',
+      'This poll is no longer active.',
+    );
+
     await interaction.reply({
-      content: 'This poll is no longer active.',
+      embeds: [embed],
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -63,10 +71,7 @@ async function buildPollMessage(pollId) {
   const noVotes = countVotes(poll, 'no');
   const totalVotes = yesVotes + noVotes;
 
-  const embed = new EmbedBuilder()
-    .setColor(0x2ecc71)
-    .setTitle('Poll')
-    .setDescription(poll.question)
+  const embed = createSuccessEmbed('Poll', poll.question)
     .addFields(
       {
         name: 'Yes',

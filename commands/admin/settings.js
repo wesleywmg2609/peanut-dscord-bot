@@ -1,6 +1,5 @@
 import {
   ChannelType,
-  EmbedBuilder,
   MessageFlags,
   PermissionFlagsBits,
   SlashCommandBuilder,
@@ -9,6 +8,11 @@ import {
   getGuildSettings,
   updateGuildSettings,
 } from '../../utils/guild-settings-store.js';
+import {
+  createErrorEmbed,
+  createInfoEmbed,
+  createSuccessEmbed,
+} from '../../utils/embed.js';
 
 export const data = new SlashCommandBuilder()
   .setName('settings')
@@ -98,9 +102,7 @@ async function showSettings(interaction) {
   const logChannelValue = settings.errorLogChannelId
     ? `<#${settings.errorLogChannelId}>`
     : 'Disabled';
-  const embed = new EmbedBuilder()
-    .setColor(0x5865f2)
-    .setTitle('Server Settings')
+  const embed = createInfoEmbed('Server Settings')
     .addFields(
       {
         name: 'Temporary Voice Channel',
@@ -128,10 +130,10 @@ async function setLogChannel(interaction) {
     };
   });
 
-  const embed = new EmbedBuilder()
-    .setColor(0x2ecc71)
-    .setTitle('Error Logging Enabled')
-    .setDescription(`Bot errors will be logged in ${channel}.`);
+  const embed = createSuccessEmbed(
+    'Error Logging Enabled',
+    `Bot errors will be logged in ${channel}.`,
+  );
 
   await interaction.reply({
     embeds: [embed],
@@ -147,10 +149,10 @@ async function clearLogChannel(interaction) {
     };
   });
 
-  const embed = new EmbedBuilder()
-    .setColor(0xe74c3c)
-    .setTitle('Error Logging Disabled')
-    .setDescription('Bot errors will no longer be sent to an error log channel.');
+  const embed = createErrorEmbed(
+    'Error Logging Disabled',
+    'Bot errors will no longer be sent to an error log channel.',
+  );
 
   await interaction.reply({
     embeds: [embed],
@@ -168,10 +170,10 @@ async function setTempVoiceChannel(interaction) {
     };
   });
 
-  const embed = new EmbedBuilder()
-    .setColor(0x2ecc71)
-    .setTitle('Temporary Voice Channels Enabled')
-    .setDescription(`Users who join ${channel} will get a temporary voice channel.`);
+  const embed = createSuccessEmbed(
+    'Temporary Voice Channels Enabled',
+    `Users who join ${channel} will get a temporary voice channel.`,
+  );
 
   await interaction.reply({
     embeds: [embed],
@@ -187,10 +189,10 @@ async function clearTempVoiceChannel(interaction) {
     };
   });
 
-  const embed = new EmbedBuilder()
-    .setColor(0xe74c3c)
-    .setTitle('Temporary Voice Channels Disabled')
-    .setDescription('Users will no longer create temporary channels by joining a voice channel.');
+  const embed = createErrorEmbed(
+    'Temporary Voice Channels Disabled',
+    'Users will no longer create temporary channels by joining a voice channel.',
+  );
 
   await interaction.reply({
     embeds: [embed],

@@ -1,5 +1,4 @@
 import {
-  EmbedBuilder,
   MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
@@ -68,7 +67,12 @@ export async function execute(interaction) {
     return;
   }
 
-  const channel = getOwnedTempVoiceChannel(interaction.member);
+  if (subcommand === 'claim') {
+    await claimChannel(interaction);
+    return;
+  }
+
+  const channel = await getOwnedTempVoiceChannel(interaction.member);
 
   if (!channel) {
     await interaction.reply({
@@ -79,11 +83,6 @@ export async function execute(interaction) {
   }
 
   const subcommand = interaction.options.getSubcommand();
-
-  if (subcommand === 'claim') {
-    await claimChannel(interaction);
-    return;
-  }
 
   if (subcommand === 'limit') {
     await setUserLimit(interaction, channel);

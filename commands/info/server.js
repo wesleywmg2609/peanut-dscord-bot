@@ -1,4 +1,5 @@
-import { EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder } from 'discord.js';
+import { createInfoEmbed } from '../../utils/embed.js';
 
 export const data = new SlashCommandBuilder()
   .setName('server')
@@ -7,9 +8,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction) {
   const { guild } = interaction;
 
-  const embed = new EmbedBuilder()
-    .setColor(0xf1c40f)
-    .setTitle(guild.name)
+  const embed = createInfoEmbed(guild.name)
     .setThumbnail(guild.iconURL())
     .addFields(
       {

@@ -1,4 +1,5 @@
-import { EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder } from 'discord.js';
+import { createInfoEmbed } from '../../utils/embed.js';
 
 export const data = new SlashCommandBuilder()
   .setName('avatar')
@@ -13,9 +14,7 @@ export async function execute(interaction) {
   const user = interaction.options.getUser('user') ?? interaction.user;
   const avatarUrl = user.displayAvatarURL({ size: 1024 });
 
-  const embed = new EmbedBuilder()
-    .setColor(0x3498db)
-    .setTitle(`${user.username}'s avatar`)
+  const embed = createInfoEmbed(`${user.username}'s Avatar`)
     .setImage(avatarUrl)
     .setURL(avatarUrl);
 

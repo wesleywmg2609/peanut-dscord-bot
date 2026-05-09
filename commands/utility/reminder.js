@@ -1,6 +1,5 @@
 import {
     ActionRowBuilder,
-    EmbedBuilder,
     MessageFlags,
     SlashCommandBuilder,
     StringSelectMenuBuilder,
@@ -15,6 +14,11 @@ import {
     scheduleReminder,
 } from '../../utils/reminder-scheduler.js';
 import { formatDate, truncateText } from '../../utils/text.js';
+import {
+    createErrorEmbed,
+    createInfoEmbed,
+    createSuccessEmbed,
+} from '../../utils/embed.js';
 
 const maxMinutes = 60 * 24 * 7;
 
@@ -88,10 +92,10 @@ async function addReminder(interaction) {
     await createReminder(reminderId, reminder);
     scheduleReminder(interaction.client, reminderId, reminder);
 
-    const confirmationEmbed = new EmbedBuilder()
-        .setColor(0x2ecc71)
-        .setTitle('Reminder Set')
-        .setDescription(message)
+    const confirmationEmbed = createSuccessEmbed(
+        'Reminder Set',
+        message,
+    )
         .addFields({
             name: 'When',
             value: `<t:${reminderTimestamp}:R>`,
@@ -155,10 +159,10 @@ async function listReminders(interaction) {
         })
         .join('\n\n');
 
-    const embed = new EmbedBuilder()
-        .setColor(0x5865f2)
-        .setTitle('Active Reminders')
-        .setDescription(description);
+    const embed = createInfoEmbed(
+        'Active Reminders',
+        description,
+    );
 
     await interaction.reply({
         embeds: [embed],
@@ -181,10 +185,10 @@ export async function handleSelectMenu(interaction) {
     const reminder = await getReminder(reminderId);
 
     if (!reminder || reminder.userId !== interaction.user.id) {
-        const notFoundEmbed = new EmbedBuilder()
-            .setColor(0xe74c3c)
-            .setTitle('Reminder Not Found')
-            .setDescription('I could not find that active reminder.');
+        const notFoundEmbed = createErrorEmbed(
+            'Reminder Not Found',
+            'I could not find that active reminder.',
+        );
 
         await interaction.update({
             content: '',
@@ -196,10 +200,10 @@ export async function handleSelectMenu(interaction) {
 
     await cancelReminder(reminderId);
 
-    const cancelledEmbed = new EmbedBuilder()
-        .setColor(0x2ecc71)
-        .setTitle('Reminder Cancelled')
-        .setDescription(reminder.message);
+    const cancelledEmbed = createSuccessEmbed(
+        'Reminder Cancelled',
+        reminder.message,
+    );
 
     await interaction.update({
         content: '',

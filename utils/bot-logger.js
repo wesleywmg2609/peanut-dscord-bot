@@ -1,6 +1,6 @@
-import { EmbedBuilder } from 'discord.js';
 import { getGuildSettings } from './guild-settings-store.js';
 import { truncateText } from './text.js';
+import { createErrorEmbed } from './embed.js';
 
 export async function logError(client, guildId, error, context) {
   if (!guildId) return;
@@ -13,9 +13,7 @@ export async function logError(client, guildId, error, context) {
     .catch(() => null);
   if (!channel?.isTextBased()) return;
 
-  const embed = new EmbedBuilder()
-    .setColor(0xe74c3c)
-    .setTitle('Bot Error')
+  const embed = createErrorEmbed('Bot Error')
     .addFields(
       {
         name: 'Context',
