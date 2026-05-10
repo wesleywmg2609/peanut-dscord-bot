@@ -74,7 +74,6 @@ export const data = new SlashCommandBuilder()
       .setDescription('Disables error log messages.'),
   );
 
-
 export async function execute(interaction) {
   if (!interaction.inGuild()) {
     await interaction.reply({
@@ -158,6 +157,19 @@ async function viewSettings(interaction) {
 async function setBotChannel(interaction) {
   const channel = interaction.options.getChannel('channel', true);
 
+  await channel.permissionOverwrites.edit(
+    interaction.guild.roles.everyone,
+    {
+      ViewChannel: true,
+      SendMessages: true,
+      ReadMessageHistory: true,
+      UseApplicationCommands: true,
+    },
+    {
+      reason: 'Configured as bot command channel.',
+    },
+  );
+
   await updateGuildSettings(interaction.guildId, (settings) => {
     return {
       ...settings,
@@ -167,7 +179,7 @@ async function setBotChannel(interaction) {
 
   const embed = createSuccessEmbed(
     'Bot Channel Updated',
-    `Bot commands can now only be used in ${channel}.`,
+    `${channel} is now the bot command channel.`,
   );
 
   await interaction.reply({
