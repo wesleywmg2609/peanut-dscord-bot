@@ -6,6 +6,7 @@ import { logError } from './utils/bot-logger.js';
 import { getBotEnv } from './utils/env.js';
 import { loadCommands } from './utils/load-commands.js';
 import { handleTempVoiceStateUpdate } from './utils/temp-voice.js';
+import { getGuildSettings } from './utils/guild-settings-store.js';
 
 const env = getBotEnv();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -64,7 +65,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   const command = commands.get(interaction.commandName);
+
   if (!command) return;
+
+  const settings = await getGuildSettings(interaction.guildId);
+
+  if (
+    settings.allowedBotChannelId &&
+    interaction.channelId !== settings.allowedBotChannelId
+  ) {
+    await interaction.reply({
+      content: `Please use commands in <#${settings.allowedBotChannelId}>.`,
+      flags: MessageFlags.Ephemeral,
+    });
+
+    return;
+  }
 
   try {
     await command.execute(interaction, { commands });

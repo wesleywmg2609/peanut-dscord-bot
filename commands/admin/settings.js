@@ -25,20 +25,20 @@ export const data = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) =>
     subcommand
-      .setName('set-error-log')
-      .setDescription('Sets the error log channel.')
+      .setName('set-bot-channel')
+      .setDescription('Sets the bot command channel.')
       .addChannelOption((option) =>
         option
           .setName('channel')
-          .setDescription('The text channel for error logs.')
+          .setDescription('The text channel for bot commands.')
           .addChannelTypes(ChannelType.GuildText)
           .setRequired(true),
       ),
   )
   .addSubcommand((subcommand) =>
     subcommand
-      .setName('remove-error-log')
-      .setDescription('Disables error log messages.'),
+      .setName('remove-bot-channel')
+      .setDescription('Removes the bot command channel restriction.'),
   )
   .addSubcommand((subcommand) =>
     subcommand
@@ -56,6 +56,22 @@ export const data = new SlashCommandBuilder()
     subcommand
       .setName('remove-temp-voice')
       .setDescription('Disables temporary voice channel creation.'),
+  ).addSubcommand((subcommand) =>
+    subcommand
+      .setName('set-error-log')
+      .setDescription('Sets the error log channel.')
+      .addChannelOption((option) =>
+        option
+          .setName('channel')
+          .setDescription('The text channel for error logs.')
+          .addChannelTypes(ChannelType.GuildText)
+          .setRequired(true),
+      ),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName('remove-error-log')
+      .setDescription('Disables error log messages.'),
   );
 
 
@@ -72,6 +88,16 @@ export async function execute(interaction) {
 
   if (subcommand === 'view') {
     await viewSettings(interaction);
+    return;
+  }
+
+  if (subcommand === 'set-bot-channel') {
+    await setBotChannel(interaction);
+    return;
+  }
+
+  if (subcommand === 'remove-bot-channel') {
+    await removeBotChannel(interaction);
     return;
   }
 
@@ -97,14 +123,22 @@ export async function execute(interaction) {
 
 async function viewSettings(interaction) {
   const settings = await getGuildSettings(interaction.guildId);
+  const botChannelValue = settings.allowedBotChannelId
+    ? `<#${settings.allowedBotChannelId}>`
+    : 'Disabled';
   const tempVoiceValue = settings.tempVoiceChannelId
     ? `<#${settings.tempVoiceChannelId}>`
     : 'Disabled';
   const logChannelValue = settings.errorLogChannelId
     ? `<#${settings.errorLogChannelId}>`
     : 'Disabled';
+
   const embed = createInfoEmbed('Server Settings')
     .addFields(
+      {
+        name: 'Bot Command Channel',
+        value: botChannelValue,
+      },
       {
         name: 'Temporary Voice Channel',
         value: tempVoiceValue,
@@ -121,30 +155,19 @@ async function viewSettings(interaction) {
   });
 }
 
-async function setLogChannel(interaction) {
+async function setBotChannel(interaction) {
   const channel = interaction.options.getChannel('channel', true);
-
-  await channel.permissionOverwrites.edit(
-    interaction.guild.roles.everyone,
-    {
-      ViewChannel: false,
-      ReadMessageHistory: false,
-    },
-    {
-      reason: 'Configured as private error log channel.',
-    },
-  );
 
   await updateGuildSettings(interaction.guildId, (settings) => {
     return {
       ...settings,
-      errorLogChannelId: channel.id,
+      allowedBotChannelId: channel.id,
     };
   });
 
   const embed = createSuccessEmbed(
-    'Error Logging Enabled',
-    `Bot errors will be logged in ${channel}.`,
+    'Bot Channel Updated',
+    `Bot commands can now only be used in ${channel}.`,
   );
 
   await interaction.reply({
@@ -153,17 +176,17 @@ async function setLogChannel(interaction) {
   });
 }
 
-async function removeLogChannel(interaction) {
+async function removeBotChannel(interaction) {
   await updateGuildSettings(interaction.guildId, (settings) => {
     return {
       ...settings,
-      errorLogChannelId: null,
+      allowedBotChannelId: null,
     };
   });
 
   const embed = createErrorEmbed(
-    'Error Logging Disabled',
-    'Bot errors will no longer be sent to an error log channel.',
+    'Bot Channel Restriction Removed',
+    'Bot commands can now be used in any channel.',
   );
 
   await interaction.reply({
@@ -216,6 +239,57 @@ async function removeTempVoiceChannel(interaction) {
   const embed = createErrorEmbed(
     'Temporary Voice Channels Disabled',
     'Users will no longer create temporary channels by joining a voice channel.',
+  );
+
+  await interaction.reply({
+    embeds: [embed],
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+async function setLogChannel(interaction) {
+  const channel = interaction.options.getChannel('channel', true);
+
+  await channel.permissionOverwrites.edit(
+    interaction.guild.roles.everyone,
+    {
+      ViewChannel: false,
+      ReadMessageHistory: false,
+    },
+    {
+      reason: 'Configured as private error log channel.',
+    },
+  );
+
+  await updateGuildSettings(interaction.guildId, (settings) => {
+    return {
+      ...settings,
+      errorLogChannelId: channel.id,
+    };
+  });
+
+  const embed = createSuccessEmbed(
+    'Error Logging Enabled',
+    `Bot errors will be logged in ${channel}.`,
+  );
+
+  await interaction.reply({
+    embeds: [embed],
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+async function removeLogChannel(interaction) {
+  await updateGuildSettings(interaction.guildId, (settings) => {
+    return {
+      ...settings,
+      errorLogChannelId: null,
+    };
+  });
+
+  const embed = createErrorEmbed(
+    'Error Logging Disabled',
+    'Bot errors will no longer be sent to an error log channel.',
   );
 
   await interaction.reply({

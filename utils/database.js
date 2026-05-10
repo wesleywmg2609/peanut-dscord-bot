@@ -14,6 +14,7 @@ export const db = new Database(databasePath);
 db.exec(`
   CREATE TABLE IF NOT EXISTS guild_settings (
     guild_id TEXT PRIMARY KEY,
+    allowed_bot_channel_id TEXT,
     temp_voice_channel_id TEXT,
     error_log_channel_id TEXT
   );
