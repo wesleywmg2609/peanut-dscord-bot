@@ -9,9 +9,14 @@ Create `bot/.env` from `bot/.env.example` and fill in your Discord values:
 ```env
 DISCORD_TOKEN=your_bot_token_here
 CLIENT_ID=your_application_client_id_here
+POSTGRES_DB=peanut
+POSTGRES_HOST=postgresql
+POSTGRES_PORT=5432
+POSTGRES_USER=peanut
+POSTGRES_PASSWORD=change_this_password
 ```
 
-`DATABASE_URL` is set automatically by Docker Compose for the bot container. Keep the `DATABASE_URL` value in `bot/.env` only if you also run the bot locally without Docker.
+The bot builds its PostgreSQL connection string from the `POSTGRES_*` values. If you run the bot outside Docker, change `POSTGRES_HOST` to `localhost`.
 
 Do not upload `bot/.env` to GitHub.
 
@@ -71,7 +76,7 @@ docker compose --profile tools down
 
 `bot`
 
-Runs Peanut using `bot/Dockerfile`. It reads Discord credentials from `bot/.env` and connects to PostgreSQL with the Compose-provided `DATABASE_URL`.
+Runs Peanut using `bot/Dockerfile`. It reads Discord credentials and PostgreSQL settings from `bot/.env`.
 
 `postgresql`
 

@@ -3,7 +3,7 @@ import pg from 'pg';
 const { Pool } = pg;
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: getDatabaseUrl(),
 });
 
 let schemaReadyPromise;
@@ -48,4 +48,28 @@ async function initSchema() {
   `);
 
   return schemaReadyPromise;
+}
+
+function getDatabaseUrl() {
+  if (process.env.DATABASE_URL) {
+    return process.env.DATABASE_URL;
+  }
+
+  const host = process.env.POSTGRES_HOST ?? 'postgresql';
+  const port = process.env.POSTGRES_PORT ?? '5432';
+  const user = getRequiredEnv('POSTGRES_USER');
+  const password = encodeURIComponent(getRequiredEnv('POSTGRES_PASSWORD'));
+  const database = getRequiredEnv('POSTGRES_DB');
+
+  return `postgres://${user}:${password}@${host}:${port}/${database}`;
+}
+
+function getRequiredEnv(name) {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+
+  return value;
 }

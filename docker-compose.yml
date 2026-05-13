@@ -1,3 +1,5 @@
+name: peanut
+
 services:
   bot:
     build:
@@ -5,8 +7,6 @@ services:
       dockerfile: bot/Dockerfile
     env_file:
       - bot/.env
-    environment:
-      DATABASE_URL: postgres://peanut:peanut@postgresql:5432/peanut
     depends_on:
       postgresql:
         condition: service_healthy
@@ -25,12 +25,11 @@ services:
 
   postgresql:
     image: postgres:17
-    environment:
-      POSTGRES_DB: peanut
-      POSTGRES_USER: peanut
-      POSTGRES_PASSWORD: peanut
+    restart: unless-stopped
+    env_file:
+      - bot/.env
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U peanut -d peanut"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 10
