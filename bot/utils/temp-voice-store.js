@@ -1,4 +1,4 @@
-import { db } from './database.js';
+import { query } from './database.js';
 
 /**
  * @typedef {Object} TempVoiceChannel
@@ -12,7 +12,7 @@ import { db } from './database.js';
  * @returns {Promise<TempVoiceChannel | null>}
  */
 export async function createTempVoiceChannel(channelId, tempVoiceChannel) {
-  db.prepare(
+  await query(
     `
       INSERT INTO temp_voice_channels (
         channel_id,
@@ -20,13 +20,14 @@ export async function createTempVoiceChannel(channelId, tempVoiceChannel) {
         owner_id,
         created_at
       )
-      VALUES (?, ?, ?, ?)
+      VALUES ($1, $2, $3, $4)
     `,
-  ).run(
-    channelId,
-    tempVoiceChannel.guildId,
-    tempVoiceChannel.ownerId,
-    tempVoiceChannel.createdAt,
+    [
+      channelId,
+      tempVoiceChannel.guildId,
+      tempVoiceChannel.ownerId,
+      tempVoiceChannel.createdAt,
+    ],
   );
 
   return tempVoiceChannel;
@@ -37,22 +38,27 @@ export async function createTempVoiceChannel(channelId, tempVoiceChannel) {
  * @returns {Promise<TempVoiceChannel | null>}
  */
 export async function getTempVoiceChannel(channelId) {
-  const tempVoiceChannel = /** @type {TempVoiceChannel | undefined} */ (
-    db
-      .prepare(
-        `
-          SELECT
-            guild_id AS guildId,
-            owner_id AS ownerId,
-            created_at AS createdAt
-          FROM temp_voice_channels
-          WHERE channel_id = ?
-        `,
-      )
-      .get(channelId)
+  const result = await query(
+    `
+      SELECT
+        guild_id AS "guildId",
+        owner_id AS "ownerId",
+        created_at AS "createdAt"
+      FROM temp_voice_channels
+      WHERE channel_id = $1
+    `,
+    [channelId],
   );
+  const tempVoiceChannel = /** @type {TempVoiceChannel | undefined} */ (result.rows[0]);
 
-  return tempVoiceChannel ?? null;
+  if (!tempVoiceChannel) {
+    return null;
+  }
+
+  return {
+    ...tempVoiceChannel,
+    createdAt: Number(tempVoiceChannel.createdAt),
+  };
 }
 
 /**
@@ -60,7 +66,7 @@ export async function getTempVoiceChannel(channelId) {
  * @returns {Promise<void>}
  */
 export async function deleteTempVoiceChannel(channelId) {
-  db.prepare('DELETE FROM temp_voice_channels WHERE channel_id = ?').run(channelId);
+  await query('DELETE FROM temp_voice_channels WHERE channel_id = $1', [channelId]);
 }
 
 /**
@@ -77,20 +83,21 @@ export async function updateTempVoiceChannel(channelId, update) {
 
   const updatedTempVoiceChannel = update(tempVoiceChannel);
 
-  db.prepare(
+  await query(
     `
       UPDATE temp_voice_channels
       SET
-        guild_id = ?,
-        owner_id = ?,
-        created_at = ?
-      WHERE channel_id = ?
+        guild_id = $1,
+        owner_id = $2,
+        created_at = $3
+      WHERE channel_id = $4
     `,
-  ).run(
-    updatedTempVoiceChannel.guildId,
-    updatedTempVoiceChannel.ownerId,
-    updatedTempVoiceChannel.createdAt,
-    channelId,
+    [
+      updatedTempVoiceChannel.guildId,
+      updatedTempVoiceChannel.ownerId,
+      updatedTempVoiceChannel.createdAt,
+      channelId,
+    ],
   );
 
   return updatedTempVoiceChannel;

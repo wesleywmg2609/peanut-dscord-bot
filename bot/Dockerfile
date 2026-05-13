@@ -2,10 +2,6 @@ FROM node:22-bookworm-slim AS deps
 
 WORKDIR /app
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends python3 make g++ \
-  && rm -rf /var/lib/apt/lists/*
-
 COPY bot/package.json bot/pnpm-lock.yaml bot/pnpm-workspace.yaml ./
 
 RUN corepack enable \
@@ -25,9 +21,5 @@ COPY bot/package.json bot/pnpm-lock.yaml bot/pnpm-workspace.yaml ./
 COPY bot/commands ./commands
 COPY bot/utils ./utils
 COPY bot/deploy-commands.js bot/index.js ./
-
-RUN mkdir -p data
-
-VOLUME ["/app/data"]
 
 CMD ["pnpm", "start"]

@@ -1,45 +1,51 @@
-import { mkdirSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import Database from 'better-sqlite3';
+import pg from 'pg';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dataPath = path.join(__dirname, '..', 'data');
-const databasePath = path.join(dataPath, 'peanut.db');
+const { Pool } = pg;
 
-mkdirSync(dataPath, { recursive: true });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
-export const db = new Database(databasePath);
+let schemaReadyPromise;
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS guild_settings (
-    guild_id TEXT PRIMARY KEY,
-    allowed_bot_channel_id TEXT,
-    temp_voice_channel_id TEXT,
-    error_log_channel_id TEXT
-  );
+export async function query(text, params) {
+  await initSchema();
+  return pool.query(text, params);
+}
 
-  CREATE TABLE IF NOT EXISTS temp_voice_channels (
-  channel_id TEXT PRIMARY KEY,
-  guild_id TEXT NOT NULL,
-  owner_id TEXT NOT NULL,
-  created_at INTEGER NOT NULL
-  );
+async function initSchema() {
+  schemaReadyPromise ??= pool.query(`
+    CREATE TABLE IF NOT EXISTS guild_settings (
+      guild_id TEXT PRIMARY KEY,
+      allowed_bot_channel_id TEXT,
+      temp_voice_channel_id TEXT,
+      error_log_channel_id TEXT
+    );
 
-  CREATE TABLE IF NOT EXISTS reminders (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    guild_name TEXT NOT NULL,
-    message TEXT NOT NULL,
-    remind_at INTEGER NOT NULL,
-    created_at INTEGER NOT NULL
-  );
+    CREATE TABLE IF NOT EXISTS temp_voice_channels (
+      channel_id TEXT PRIMARY KEY,
+      guild_id TEXT NOT NULL,
+      owner_id TEXT NOT NULL,
+      created_at BIGINT NOT NULL
+    );
 
-  CREATE TABLE IF NOT EXISTS polls (
-    id TEXT PRIMARY KEY,
-    question TEXT NOT NULL,
-    creator_id TEXT NOT NULL,
-    created_at INTEGER NOT NULL,
-    votes TEXT NOT NULL DEFAULT '{}'
-  );
-`);
+    CREATE TABLE IF NOT EXISTS reminders (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      guild_name TEXT NOT NULL,
+      message TEXT NOT NULL,
+      remind_at BIGINT NOT NULL,
+      created_at BIGINT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS polls (
+      id TEXT PRIMARY KEY,
+      question TEXT NOT NULL,
+      creator_id TEXT NOT NULL,
+      created_at BIGINT NOT NULL,
+      votes JSONB NOT NULL DEFAULT '{}'::jsonb
+    );
+  `);
+
+  return schemaReadyPromise;
+}

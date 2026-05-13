@@ -1,4 +1,4 @@
-import { db } from './database.js';
+import { query } from './database.js';
 
 /**
  * @typedef {Object} GuildSettings
@@ -12,20 +12,18 @@ import { db } from './database.js';
  * @returns {Promise<GuildSettings>}
  */
 export async function getGuildSettings(guildId) {
-  const settings = /** @type {GuildSettings | undefined} */ (
-    db
-      .prepare(
-        `
-          SELECT
-            allowed_bot_channel_id AS allowedBotChannelId,
-            temp_voice_channel_id AS tempVoiceChannelId,
-            error_log_channel_id AS errorLogChannelId
-          FROM guild_settings
-          WHERE guild_id = ?
-        `,
-      )
-      .get(guildId)
+  const result = await query(
+    `
+      SELECT
+        allowed_bot_channel_id AS "allowedBotChannelId",
+        temp_voice_channel_id AS "tempVoiceChannelId",
+        error_log_channel_id AS "errorLogChannelId"
+      FROM guild_settings
+      WHERE guild_id = $1
+    `,
+    [guildId],
   );
+  const settings = /** @type {GuildSettings | undefined} */ (result.rows[0]);
 
   return settings ?? {
     allowedBotChannelId: null,
@@ -38,7 +36,7 @@ export async function updateGuildSettings(guildId, update) {
   const currentSettings = await getGuildSettings(guildId);
   const updatedSettings = update(currentSettings);
 
-  db.prepare(
+  await query(
     `
       INSERT INTO guild_settings (
         guild_id,
@@ -46,17 +44,18 @@ export async function updateGuildSettings(guildId, update) {
         temp_voice_channel_id,
         error_log_channel_id
       )
-      VALUES (?, ?, ?, ?)
+      VALUES ($1, $2, $3, $4)
       ON CONFLICT(guild_id) DO UPDATE SET
-        allowed_bot_channel_id = excluded.allowed_bot_channel_id,
-        temp_voice_channel_id = excluded.temp_voice_channel_id,
-        error_log_channel_id = excluded.error_log_channel_id
+        allowed_bot_channel_id = EXCLUDED.allowed_bot_channel_id,
+        temp_voice_channel_id = EXCLUDED.temp_voice_channel_id,
+        error_log_channel_id = EXCLUDED.error_log_channel_id
     `,
-  ).run(
-    guildId,
-    updatedSettings.allowedBotChannelId,
-    updatedSettings.tempVoiceChannelId,
-    updatedSettings.errorLogChannelId,
+    [
+      guildId,
+      updatedSettings.allowedBotChannelId,
+      updatedSettings.tempVoiceChannelId,
+      updatedSettings.errorLogChannelId,
+    ],
   );
 
   return updatedSettings;
