@@ -1,5 +1,6 @@
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { logError } from '../../utils/bot-logger.js';
+import { truncateText } from '../../utils/text.js';
 
 const DEFAULT_OLLAMA_BASE_URL = 'http://ollama:11434';
 const DEFAULT_OLLAMA_MODEL = 'llama3.2:1b';
@@ -59,19 +60,11 @@ export async function execute(interaction) {
 
   const result = await response.json();
 
-  const answer = truncateDiscordMessage((result.response ?? '').trim());
+  const answer = truncateText((result.response ?? '').trim(), MAX_DISCORD_MESSAGE_LENGTH);
 
   await interaction.editReply({
     content: answer || 'No response generated.',
   });
-}
-
-function truncateDiscordMessage(message) {
-  if (message.length <= MAX_DISCORD_MESSAGE_LENGTH) {
-    return message;
-  }
-
-  return `${message.slice(0, MAX_DISCORD_MESSAGE_LENGTH - 3)}...`;
 }
 
 async function handleOllamaError(interaction, response, baseUrl, model) {
