@@ -9,6 +9,8 @@ Create `bot/.env` from `bot/.env.example` and fill in your Discord values:
 ```env
 DISCORD_TOKEN=your_bot_token_here
 CLIENT_ID=your_application_client_id_here
+OLLAMA_BASE_URL=http://ollama:11434
+OLLAMA_MODEL=llama3.2:1b
 POSTGRES_DB=peanut
 POSTGRES_HOST=postgresql
 POSTGRES_PORT=5432
@@ -29,6 +31,14 @@ docker compose up -d --build bot
 ```
 
 This rebuilds the bot image, starts PostgreSQL, then starts the bot in the background.
+
+Download the local AI model once:
+
+```powershell
+docker compose exec ollama ollama pull llama3.2:1b
+```
+
+Run this after the first `docker compose up -d --build bot`. The model is stored in the Docker volume `ollama-data`.
 
 Deploy Discord slash commands:
 
@@ -90,9 +100,15 @@ Runs `pnpm run deploy` once to register Discord slash commands. This service is 
 
 Runs a browser UI for PostgreSQL at `http://localhost:8080`. This service is also behind the `tools` profile.
 
+`ollama`
+
+Runs the local AI server used by `/ask`. Model files are stored in the Docker volume `ollama-data`.
+
 ## Development Notes
 
 Edit slash commands in `bot/commands`.
+
+The `/ask` command uses local Ollama through `OLLAMA_BASE_URL` and `OLLAMA_MODEL` in `bot/.env`. No cloud AI API key is required.
 
 Edit bot startup and event handling in `bot/index.js`.
 
@@ -110,4 +126,4 @@ After changing slash command definitions, run:
 docker compose --profile tools run --rm deploy
 ```
 
-Server admins can configure temporary voice channels in Discord with `/settings temp-voice`.
+Server admins can configure temporary voice channels in Discord with `/settings set-temp-voice`.

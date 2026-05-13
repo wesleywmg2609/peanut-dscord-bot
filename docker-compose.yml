@@ -10,6 +10,8 @@ services:
     depends_on:
       postgresql:
         condition: service_healthy
+      ollama:
+        condition: service_started
     init: true
     restart: unless-stopped
 
@@ -45,5 +47,14 @@ services:
     profiles:
       - tools
 
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+
 volumes:
   postgres-data:
+  ollama-data:
