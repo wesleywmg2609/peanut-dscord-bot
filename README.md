@@ -4,25 +4,27 @@ Peanut is a custom Discord bot built with Node.js and discord.js.
 
 ## Files
 
-### `deploy-commands.js`
+### `bot/deploy-commands.js`
 
 Registers Peanut's slash commands with Discord.
 
 Run this when you add, remove, or change a slash command, such as `/ping`.
 
 ```powershell
+cd bot
 pnpm run deploy
 ```
 
 This script does not keep the bot online. It only tells Discord which slash commands Peanut supports.
 
-### `index.js`
+### `bot/index.js`
 
 Starts the bot and keeps it online while the command is running.
 
 Run this when you want Peanut to log in to Discord and respond to commands.
 
 ```powershell
+cd bot
 pnpm start
 ```
 
@@ -36,16 +38,18 @@ If you close the terminal or stop the command, Peanut goes offline.
 
 ## Usual Workflow
 
-1. Edit commands in `deploy-commands.js` and command behavior in `index.js`.
+1. Edit commands in `bot/commands` and command behavior in `bot/index.js`.
 2. Register slash commands:
 
 ```powershell
+cd bot
 pnpm run deploy
 ```
 
 3. Start the bot:
 
 ```powershell
+cd bot
 pnpm start
 ```
 
@@ -57,7 +61,7 @@ pnpm start
 
 ## Environment Variables
 
-Peanut reads secrets and IDs from `.env`.
+Peanut reads secrets and IDs from `bot/.env`.
 
 ```env
 DISCORD_TOKEN=your_bot_token_here
@@ -72,4 +76,32 @@ Use `COMMAND_DEPLOY_SCOPE=global` when you want Peanut's commands available in e
 
 Server admins can configure temporary voice channels in Discord with `/settings temp-voice`.
 
-Do not upload `.env` to GitHub. Use `.env.example` as the public template.
+Do not upload `bot/.env` to GitHub. Use `bot/.env.example` as the public template.
+
+## Docker
+
+Build and start Peanut:
+
+```powershell
+docker compose up -d --build bot
+```
+
+View logs:
+
+```powershell
+docker compose logs -f bot
+```
+
+Stop the bot:
+
+```powershell
+docker compose down
+```
+
+Register slash commands from the same Docker image:
+
+```powershell
+docker compose --profile tools run --rm deploy
+```
+
+The bot image is defined in `bot/Dockerfile`. The compose setup reads `bot/.env` and mounts `./bot/data` into the container so `bot/data/peanut.db` persists across rebuilds.

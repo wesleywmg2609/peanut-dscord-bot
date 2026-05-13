@@ -3,6 +3,11 @@ node_modules/
 .env
 data/*.db
 data/*.db-*
+bot/node_modules/
+bot/.pnpm-store/
+bot/.env
+bot/data/*.db
+bot/data/*.db-*
 
 npm-debug.log*
 pnpm-debug.log*

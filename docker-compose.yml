@@ -1,0 +1,21 @@
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    env_file:
+      - bot/.env
+    init: true
+    volumes:
+      - ./bot/data:/app/data
+    restart: unless-stopped
+
+  deploy:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    command: pnpm run deploy
+    env_file:
+      - bot/.env
+    profiles:
+      - tools
