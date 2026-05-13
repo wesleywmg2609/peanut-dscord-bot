@@ -47,13 +47,13 @@ export async function execute(interaction) {
   } catch (error) {
     await logError(interaction.client, interaction.guildId, error, '/ask');
     await interaction.editReply({
-      content: 'Peanut could not reach the service. Try again later.',
+      content: 'Peanut can\'t do that right now.',
     });
     return;
   }
 
   if (!response.ok) {
-    await handleOllamaError(interaction, response, ollamaModel);
+    await handleOllamaError(interaction, response, ollamaBaseUrl, ollamaModel);
     return;
   }
 
@@ -74,15 +74,15 @@ function truncateDiscordMessage(message) {
   return `${message.slice(0, MAX_DISCORD_MESSAGE_LENGTH - 3)}...`;
 }
 
-async function handleOllamaError(interaction, response, model) {
+async function handleOllamaError(interaction, response, baseUrl, model) {
   const errorText = await response.text();
   const error = new Error(`Ollama returned HTTP ${response.status}: ${errorText}`);
   await logError(interaction.client, interaction.guildId, error, '/ask');
 
   const message =
     response.status === 404
-      ? `Peanut's local AI model is not installed yet.`
-      : 'Peanut could not get a response from the service. Try again later.';
+      ? 'Peanut has not learned how to think yet.'
+      : 'Peanut can\'t do that right now.';
 
   await interaction.editReply({
     content: message,

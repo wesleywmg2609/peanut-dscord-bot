@@ -13,17 +13,30 @@ export async function logError(client, guildId, error, context) {
     .catch(() => null);
   if (!channel?.isTextBased()) return;
 
+  const fields = [
+    {
+      name: 'Context',
+      value: truncateText(context, 1024),
+    },
+    {
+      name: 'Error Name',
+      value: truncateText(error?.name ?? 'UnknownError', 1024),
+      inline: true,
+    },
+    {
+      name: 'Message',
+      value: truncateText(error?.message ?? String(error), 1024),
+      inline: true,
+    },
+  ];
+
+  fields.push({
+    name: 'Stack',
+    value: truncateText(error?.stack ?? String(error), 1024),
+  });
+
   const embed = createErrorEmbed('Bot Error')
-    .addFields(
-      {
-        name: 'Context',
-        value: context,
-      },
-      {
-        name: 'Error',
-        value: truncateText(error?.stack ?? String(error), 1000),
-      },
-    )
+    .addFields(fields)
     .setTimestamp();
 
   await channel.send({ embeds: [embed] }).catch(() => null);
