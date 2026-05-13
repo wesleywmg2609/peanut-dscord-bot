@@ -37,10 +37,10 @@ export async function execute(interaction) {
         model: ollamaModel,
         prompt: message,
         system:
-          'You are Peanut, a helpful Discord bot. Answer clearly and concisely. Keep replies suitable for a Discord chat.',
+          'You are Peanut, a helpful Discord bot. Give short, direct answers in 1 to 3 sentences. If the user asks for a recommendation, choose one good option instead of asking many follow-up questions.',
         stream: false,
         options: {
-          num_predict: 600,
+          num_predict: 160,
         },
       }),
     });
